@@ -1,18 +1,38 @@
 # AI-Powered Lecture Voice-to-Notes Generator (Local, Open-Source)
 
-This project converts lecture audio into **transcripts** and **AI-generated notes** using:
+[![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-High%20Performance-green)](https://fastapi.tiangolo.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Local%20DB-brightgreen)](https://www.mongodb.com/)
 
-- `faster-whisper` (open-source Whisper) for speech-to-text
-- A **local LLM** (Phi model via **Ollama**) for notes generation
-- **FastAPI** (Python) for the backend API
-- **MongoDB Community Edition** for local data storage
-- **HTML, CSS, JavaScript (vanilla)** for the frontend
 
-Everything runs **locally** and uses **100% free and open-source tools**.
+This project converts lecture audio into **transcripts** and **AI-generated notes** using a fully **local and open-source stack**. No cloud APIs, no subscription fees, 100% offline.
 
 ---
 
-## 1. Project Structure
+## Features
+
+* **Speech-to-Text**: Uses [faster-whisper](https://github.com/guillaumekln/faster-whisper) for high-quality, local transcription.
+* **AI Notes Generation**: Local LLM via [Ollama](https://ollama.com/) (default: `phi3`) creates structured lecture notes.
+* **Backend**: Built with FastAPI for async and easy-to-use APIs.
+* **Local Database**: MongoDB stores lecture metadata, transcripts, and notes.
+* **Frontend**: Simple HTML/CSS/JS interface for uploading audio, viewing transcripts, and generating notes.
+* **Export**: Export notes in **PDF** or **plain text**.
+
+---
+
+## Table of Contents
+
+1. [Project Structure](#project-structure)
+2. [Prerequisites](#prerequisites)
+3. [Setup & Installation](#setup--installation)
+4. [Running the Backend](#running-the-backend)
+5. [Running the Frontend](#running-the-frontend)
+6. [Typical Workflow](#typical-workflow)
+7. [Key Technical Choices](#key-technical-choices)
+
+---
+
+## Project Structure
 
 ```text
 backend/
@@ -43,169 +63,128 @@ requirements.txt
 
 ---
 
-## 2. Prerequisites
+## Prerequisites
 
-- **Python** 3.10+ (recommended)
-- **MongoDB Community Edition** running locally (default URI: `mongodb://localhost:27017`)
-- **Ollama** installed and running locally, with a suitable model pulled:
-  - **Recommended**: `ollama pull tinyllama` (~637MB, fastest and lightweight - configured as default)
-  - Alternatives: `ollama pull phi` (~1.6GB) or `ollama pull mistral` (~4GB, best quality)
-  - See `OLLAMA_TROUBLESHOOTING.md` or `NETWORK_TIMEOUT_FIX.md` if you encounter download errors
-- A modern browser (for the frontend).
+* **Python 3.10+**
+* **MongoDB Community Edition** running locally (default URI: `mongodb://localhost:27017`)
+* **Ollama** installed and running locally with a model pulled:
+
+  * Recommended: `phi3` (~2.3GB, good balance of speed & quality)
+  * Alternatives: `mistral` (~4GB, higher quality) or `tinyllama` (~637MB, faster)
+* Modern web browser for the frontend
 
 ---
 
-## 3. Setup & Installation
+## Setup & Installation
 
-1. **Create and activate a virtual environment (recommended)**
+### 1. Create and activate a virtual environment
 
 ```bash
 cd s-project
 python -m venv .venv
-.venv\Scripts\activate  # on Windows PowerShell
+# Windows PowerShell
+.venv\Scripts\activate
 ```
 
-2. **Install Python dependencies**
+### 2. Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Install and Start MongoDB Community Edition**
+### 3. Install and Start MongoDB
 
-   **Option A: Install MongoDB Community Edition (if not installed)**
-   
-   1. Download MongoDB Community Edition for Windows:
-      - Go to: https://www.mongodb.com/try/download/community
-      - Select: Windows, MSI package
-      - Click "Download"
-   
-   2. Run the installer:
-      - Choose "Complete" installation
-      - **Important**: Check "Install MongoDB as a Service"
-      - Service name: `MongoDB`
-      - Run service as: Network Service user
-      - Install MongoDB Compass (optional GUI tool)
-   
-   3. After installation, MongoDB service should start automatically.
-   
-   **Option B: Check if MongoDB is already running**
-   
-   Open PowerShell and run:
-   ```powershell
-   Get-Service -Name "MongoDB" | Select-Object Name, Status
-   ```
-   
-   If Status is "Running", MongoDB is ready!
-   
-   **Option C: Start MongoDB manually (if service exists but stopped)**
-   
-   ```powershell
-   # Start MongoDB service
-   Start-Service -Name "MongoDB"
-   
-   # Or using net command
-   net start MongoDB
-   ```
-   
-   **Option D: Run MongoDB manually (if not installed as service)**
-   
-   If you installed MongoDB but not as a service, you can run it manually:
-   ```powershell
-   # Navigate to MongoDB bin folder (usually C:\Program Files\MongoDB\Server\<version>\bin)
-   cd "C:\Program Files\MongoDB\Server\7.0\bin"
-   
-   # Start MongoDB
-   .\mongod.exe --dbpath "C:\data\db"
-   ```
-   
-   **Verify MongoDB is running:**
-   
-   ```powershell
-   # Test connection
-   mongosh
-   # Or if mongosh is not available:
-   mongo
-   ```
-   
-   If you see a MongoDB shell prompt, MongoDB is running correctly on `mongodb://localhost:27017`.
+#### Option A: Fresh Installation
 
-4. **Ensure Ollama is running with a model**
+1. Download MongoDB Community Edition: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+2. Run the installer → choose **Complete** → install as **service** → optional: install MongoDB Compass
+3. MongoDB service should start automatically
 
-```bash
-# Start Ollama server (keep this terminal open)
-ollama serve
+#### Option B: Check if MongoDB is running
 
-# In another terminal, pull a model (recommended: tinyllama for fastest download)
-ollama pull tinyllama
+```powershell
+Get-Service -Name "MongoDB" | Select-Object Name, Status
 ```
 
-**Note:** If you get network timeout errors, try:
-- `ollama pull tinyllama` (smallest, ~637MB) - **Recommended for student laptops** (configured as default)
-- `ollama pull phi` (smaller, ~1.6GB)
-- See `OLLAMA_TROUBLESHOOTING.md` or `NETWORK_TIMEOUT_FIX.md` for detailed help
+#### Option C: Start MongoDB manually (service exists but stopped)
 
-If you use a different model name, update `backend/app/config.py`:
-- `LLM_MODEL_NAME` (default is `"tinyllama"`)
+```powershell
+Start-Service -Name "MongoDB"
+```
+
+#### Option D: Run MongoDB manually (if not a service)
+
+```powershell
+cd "C:\Program Files\MongoDB\Server\<version>\bin"
+.\mongod.exe --dbpath "C:\data\db"
+```
+
+Verify MongoDB:
+
+```powershell
+mongosh
+```
 
 ---
 
-## 4. Running the Backend
+### 4. Ensure Ollama is running with a model
 
-From the project root:
+```bash
+# Start Ollama server (keep terminal open)
+ollama serve
+
+# Pull recommended model
+ollama pull phi3
+```
+
+> If using a different model, update `backend/app/config.py`:
+>
+> * `LLM_MODEL_NAME = "<your_model_name>"`
+
+---
+
+## Running the Backend
 
 ```bash
 uvicorn backend.app.main:app --reload
 ```
 
-This starts FastAPI at `http://127.0.0.1:8000`.
-
-- API docs: `http://127.0.0.1:8000/docs`
-
----
-
-## 5. Running the Frontend
-
-Simplest approach during development:
-
-- Open `frontend/index.html` directly in the browser (double-click or "Open in Browser").
-
-Or serve it with a simple static server (optional).
-
-The frontend expects the backend at `http://127.0.0.1:8000`.
+* Backend URL: `http://127.0.0.1:8000`
+* API docs: `http://127.0.0.1:8000/docs`
 
 ---
 
-## 6. Typical Workflow
+## Running the Frontend
 
-1. User opens the frontend (`frontend/index.html`).
-2. User fills lecture metadata and:
-   - uploads an audio file **or**
-   - records via microphone.
-3. Frontend sends a `POST /api/lectures` request (multipart) to FastAPI.
+* Open `frontend/index.html` directly in a browser
+* Or serve with a static server (optional)
+
+> The frontend expects the backend at `http://127.0.0.1:8000`.
+
+---
+
+## Typical Workflow
+
+1. Open the frontend (`index.html`)
+2. Fill lecture metadata and upload an audio file **or** record via microphone
+3. Frontend sends a `POST /api/lectures` request to FastAPI
 4. Backend:
-   - Saves audio locally under `data/audio/`.
-   - Transcribes it with `faster-whisper`.
-   - Stores transcript and metadata in MongoDB.
-5. User selects a lecture from the list to view transcript.
-6. User clicks **Generate Notes**:
-   - Backend calls local LLM (Ollama) with a structured prompt.
-   - Stores generated notes in MongoDB.
-7. User can **export notes** as **PDF** or **plain text**.
+
+   * Saves audio locally (`data/audio/`)
+   * Transcribes it with `faster-whisper`
+   * Stores transcript and metadata in MongoDB
+5. User selects a lecture to view transcript
+6. Click **Generate Notes** → local LLM produces structured notes → stored in MongoDB
+7. Export notes as **PDF** or **plain text**
 
 ---
 
-## 7. Key Technical Choices (for Viva)
+## Key Technical Choices
 
-- **FastAPI**: modern, async Python framework, easy to document and test.
-- **MongoDB**: flexible schema for large transcripts and notes text; easy to run locally.
-- **faster-whisper**: optimized open-source implementation of Whisper; good for laptops.
-- **Local LLM with Ollama**: respects data privacy and avoids paid cloud APIs.
-- **Clean modular structure**:
-  - `services/` for AI and export logic.
-  - `routers/` for HTTP endpoints.
-  - `schemas.py` for request/response models.
-- **Synchronous transcription and notes generation**:
-  - Simpler to implement and explain for a final-year project.
-  - Still clear where to extend for background jobs or queues.
+* **FastAPI**: modern, async Python framework with automatic API docs
+* **MongoDB**: flexible schema for storing transcripts & notes
+* **faster-whisper**: optimized, open-source speech-to-text
+* **Local LLM with Ollama**: privacy-first, avoids paid cloud APIs
+* **Modular structure**: `services/` for AI logic, `routers/` for HTTP endpoints, `schemas.py` for request/response models
+* **Synchronous processing**: simpler design; can extend to async jobs if needed
 
