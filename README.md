@@ -188,3 +188,11 @@ uvicorn backend.app.main:app --reload
 * **Modular structure**: `services/` for AI logic, `routers/` for HTTP endpoints, `schemas.py` for request/response models
 * **Synchronous processing**: simpler design; can extend to async jobs if needed
 
+---
+
+## 👨‍💻 Author
+
+**Bibek Samantray**
+<br>AI / ML Enthusiast | Full-Stack Developer
+
+---
